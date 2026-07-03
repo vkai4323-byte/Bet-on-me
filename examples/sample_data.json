@@ -1,0 +1,411 @@
+{
+  "matches": [
+    {
+      "match_id": "lol-001",
+      "sport": "lol",
+      "league": "LCK",
+      "start_time": "2026-07-10T10:00:00+00:00",
+      "home": "T1",
+      "away": "Gen.G",
+      "best_of": 3,
+      "stage": "regular",
+      "neutral_site": false,
+      "patch_version": "15.13",
+      "status": "scheduled"
+    },
+    {
+      "match_id": "valorant-001",
+      "sport": "valorant",
+      "league": "VCT",
+      "start_time": "2026-07-11T12:00:00+00:00",
+      "home": "Fnatic",
+      "away": "Paper Rex",
+      "best_of": 3,
+      "stage": "playoffs",
+      "neutral_site": true,
+      "patch_version": "11.01",
+      "status": "scheduled"
+    },
+    {
+      "match_id": "cs2-001",
+      "sport": "cs2",
+      "league": "IEM",
+      "start_time": "2026-07-12T15:00:00+00:00",
+      "home": "Natus Vincere",
+      "away": "Vitality",
+      "best_of": 3,
+      "stage": "semifinal",
+      "neutral_site": true,
+      "patch_version": "2026.06",
+      "status": "scheduled"
+    },
+    {
+      "match_id": "football-001",
+      "sport": "football",
+      "league": "World Cup",
+      "start_time": "2026-07-13T20:00:00+00:00",
+      "home": "Brazil",
+      "away": "Germany",
+      "best_of": 1,
+      "stage": "knockout",
+      "venue": "MetLife Stadium",
+      "surface": "grass",
+      "neutral_site": true,
+      "weather": {
+        "temperature_c": 27.0,
+        "rain_mm": 0.5,
+        "wind_kph": 12.0,
+        "humidity_pct": 72.0
+      },
+      "status": "scheduled"
+    }
+  ],
+  "odds": [
+    {
+      "match_id": "lol-001",
+      "market_id": "bet365-lol-001-home-ml",
+      "bookmaker": "bet365",
+      "market_type": "moneyline",
+      "side": "home",
+      "decimal_odds": 1.95,
+      "observed_at": "2026-07-09T10:00:00+00:00"
+    },
+    {
+      "match_id": "valorant-001",
+      "market_id": "bet365-valorant-001-home-ml",
+      "bookmaker": "bet365",
+      "market_type": "moneyline",
+      "side": "home",
+      "decimal_odds": 2.05,
+      "observed_at": "2026-07-10T12:00:00+00:00"
+    },
+    {
+      "match_id": "cs2-001",
+      "market_id": "bet365-cs2-001-home-ml",
+      "bookmaker": "bet365",
+      "market_type": "moneyline",
+      "side": "home",
+      "decimal_odds": 2.12,
+      "observed_at": "2026-07-11T15:00:00+00:00"
+    },
+    {
+      "match_id": "football-001",
+      "market_id": "bet365-football-001-home-ml",
+      "bookmaker": "bet365",
+      "market_type": "moneyline",
+      "side": "home",
+      "decimal_odds": 2.08,
+      "observed_at": "2026-07-12T20:00:00+00:00"
+    }
+  ],
+  "ratings": [
+    {
+      "entity_id": "T1",
+      "sport": "lol",
+      "observed_at": "2026-07-09T08:00:00+00:00",
+      "elo_7d": 1572,
+      "elo_14d": 1565,
+      "elo_30d": 1550,
+      "elo_90d": 1538,
+      "opponent_strength_adjustment": 8,
+      "sample_size": 18
+    },
+    {
+      "entity_id": "Gen.G",
+      "sport": "lol",
+      "observed_at": "2026-07-09T08:00:00+00:00",
+      "elo_7d": 1548,
+      "elo_14d": 1550,
+      "elo_30d": 1542,
+      "elo_90d": 1551,
+      "opponent_strength_adjustment": 11,
+      "sample_size": 17
+    },
+    {
+      "entity_id": "Fnatic",
+      "sport": "valorant",
+      "observed_at": "2026-07-10T08:00:00+00:00",
+      "elo_7d": 1510,
+      "elo_14d": 1522,
+      "elo_30d": 1534,
+      "elo_90d": 1528,
+      "opponent_strength_adjustment": 4,
+      "sample_size": 12
+    },
+    {
+      "entity_id": "Paper Rex",
+      "sport": "valorant",
+      "observed_at": "2026-07-10T08:00:00+00:00",
+      "elo_7d": 1502,
+      "elo_14d": 1510,
+      "elo_30d": 1525,
+      "elo_90d": 1518,
+      "opponent_strength_adjustment": 6,
+      "sample_size": 14
+    },
+    {
+      "entity_id": "Natus Vincere",
+      "sport": "cs2",
+      "observed_at": "2026-07-11T08:00:00+00:00",
+      "elo_7d": 1495,
+      "elo_14d": 1508,
+      "elo_30d": 1519,
+      "elo_90d": 1530,
+      "opponent_strength_adjustment": 12,
+      "sample_size": 16
+    },
+    {
+      "entity_id": "Vitality",
+      "sport": "cs2",
+      "observed_at": "2026-07-11T08:00:00+00:00",
+      "elo_7d": 1488,
+      "elo_14d": 1501,
+      "elo_30d": 1511,
+      "elo_90d": 1520,
+      "opponent_strength_adjustment": 9,
+      "sample_size": 15
+    },
+    {
+      "entity_id": "Brazil",
+      "sport": "football",
+      "observed_at": "2026-07-12T08:00:00+00:00",
+      "elo_7d": 1588,
+      "elo_14d": 1580,
+      "elo_30d": 1568,
+      "elo_90d": 1552,
+      "opponent_strength_adjustment": 7,
+      "sample_size": 9
+    },
+    {
+      "entity_id": "Germany",
+      "sport": "football",
+      "observed_at": "2026-07-12T08:00:00+00:00",
+      "elo_7d": 1540,
+      "elo_14d": 1545,
+      "elo_30d": 1554,
+      "elo_90d": 1548,
+      "opponent_strength_adjustment": 5,
+      "sample_size": 9
+    }
+  ],
+  "esports_styles": [
+    {
+      "entity_id": "T1",
+      "sport": "lol",
+      "observed_at": "2026-07-09T08:30:00+00:00",
+      "aggression": 0.58,
+      "resource_share": 0.51,
+      "first_action_rate": 0.56,
+      "clutch_or_late_game": 0.63,
+      "vision_or_info": 0.60,
+      "teamfight_or_trade": 0.64,
+      "consistency": 0.61,
+      "hero_pool_depth": 0.66,
+      "meta_pool_mastery": 0.62,
+      "map_pool_depth": 0.0,
+      "h2h_rating": 0.08,
+      "bp_fit": 0.10,
+      "synergy": 0.12,
+      "sample_size": 24
+    },
+    {
+      "entity_id": "Gen.G",
+      "sport": "lol",
+      "observed_at": "2026-07-09T08:30:00+00:00",
+      "aggression": 0.54,
+      "resource_share": 0.49,
+      "first_action_rate": 0.52,
+      "clutch_or_late_game": 0.60,
+      "vision_or_info": 0.57,
+      "teamfight_or_trade": 0.61,
+      "consistency": 0.62,
+      "hero_pool_depth": 0.64,
+      "meta_pool_mastery": 0.59,
+      "map_pool_depth": 0.0,
+      "h2h_rating": -0.04,
+      "bp_fit": 0.06,
+      "synergy": 0.10,
+      "sample_size": 22
+    },
+    {
+      "entity_id": "Fnatic",
+      "sport": "valorant",
+      "observed_at": "2026-07-10T08:30:00+00:00",
+      "aggression": 0.50,
+      "resource_share": 0.48,
+      "first_action_rate": 0.49,
+      "clutch_or_late_game": 0.58,
+      "vision_or_info": 0.62,
+      "teamfight_or_trade": 0.57,
+      "consistency": 0.59,
+      "hero_pool_depth": 0.60,
+      "meta_pool_mastery": 0.56,
+      "map_pool_depth": 0.58,
+      "h2h_rating": 0.03,
+      "bp_fit": 0.05,
+      "synergy": 0.09,
+      "sample_size": 19
+    },
+    {
+      "entity_id": "Paper Rex",
+      "sport": "valorant",
+      "observed_at": "2026-07-10T08:30:00+00:00",
+      "aggression": 0.63,
+      "resource_share": 0.53,
+      "first_action_rate": 0.61,
+      "clutch_or_late_game": 0.54,
+      "vision_or_info": 0.54,
+      "teamfight_or_trade": 0.55,
+      "consistency": 0.51,
+      "hero_pool_depth": 0.57,
+      "meta_pool_mastery": 0.54,
+      "map_pool_depth": 0.55,
+      "h2h_rating": -0.02,
+      "bp_fit": 0.01,
+      "synergy": 0.06,
+      "sample_size": 20
+    },
+    {
+      "entity_id": "Natus Vincere",
+      "sport": "cs2",
+      "observed_at": "2026-07-11T08:30:00+00:00",
+      "aggression": 0.52,
+      "resource_share": 0.50,
+      "first_action_rate": 0.50,
+      "clutch_or_late_game": 0.57,
+      "vision_or_info": 0.59,
+      "teamfight_or_trade": 0.56,
+      "consistency": 0.58,
+      "hero_pool_depth": 0.0,
+      "meta_pool_mastery": 0.51,
+      "map_pool_depth": 0.61,
+      "h2h_rating": 0.02,
+      "bp_fit": 0.04,
+      "synergy": 0.08,
+      "sample_size": 21
+    },
+    {
+      "entity_id": "Vitality",
+      "sport": "cs2",
+      "observed_at": "2026-07-11T08:30:00+00:00",
+      "aggression": 0.49,
+      "resource_share": 0.49,
+      "first_action_rate": 0.48,
+      "clutch_or_late_game": 0.56,
+      "vision_or_info": 0.55,
+      "teamfight_or_trade": 0.55,
+      "consistency": 0.57,
+      "hero_pool_depth": 0.0,
+      "meta_pool_mastery": 0.50,
+      "map_pool_depth": 0.58,
+      "h2h_rating": -0.01,
+      "bp_fit": 0.02,
+      "synergy": 0.07,
+      "sample_size": 20
+    }
+  ],
+  "patch_meta_by_match": [
+    {
+      "match_id": "lol-001",
+      "patch_meta": {
+        "sport": "lol",
+        "patch_version": "15.13",
+        "observed_at": "2026-07-09T09:00:00+00:00",
+        "meta_shift_severity": 0.35,
+        "home_patch_fit": 0.64,
+        "away_patch_fit": 0.58,
+        "strong_pool_overlap_home": 0.66,
+        "strong_pool_overlap_away": 0.61,
+        "data_weight": 0.82,
+        "notes": "Sample patch meta."
+      }
+    },
+    {
+      "match_id": "valorant-001",
+      "patch_meta": {
+        "sport": "valorant",
+        "patch_version": "11.01",
+        "observed_at": "2026-07-10T09:00:00+00:00",
+        "meta_shift_severity": 0.25,
+        "home_patch_fit": 0.58,
+        "away_patch_fit": 0.55,
+        "strong_pool_overlap_home": 0.60,
+        "strong_pool_overlap_away": 0.57,
+        "data_weight": 0.78
+      }
+    },
+    {
+      "match_id": "cs2-001",
+      "patch_meta": {
+        "sport": "cs2",
+        "patch_version": "2026.06",
+        "observed_at": "2026-07-11T09:00:00+00:00",
+        "meta_shift_severity": 0.18,
+        "home_patch_fit": 0.55,
+        "away_patch_fit": 0.52,
+        "strong_pool_overlap_home": 0.59,
+        "strong_pool_overlap_away": 0.56,
+        "data_weight": 0.85
+      }
+    }
+  ],
+  "football_context_by_match": [
+    {
+      "match_id": "football-001",
+      "football_context": {
+        "match_id": "football-001",
+        "observed_at": "2026-07-12T18:00:00+00:00",
+        "referee_yellows_per_match": 4.8,
+        "referee_reds_per_match": 0.18,
+        "referee_penalties_per_match": 0.28,
+        "referee_home_bias": 0.02,
+        "home_motivation": 0.92,
+        "away_motivation": 0.88,
+        "format_pressure": 0.75,
+        "home_schedule_pressure": 0.22,
+        "away_schedule_pressure": 0.34,
+        "home_injury_impact": 0.10,
+        "away_injury_impact": 0.18,
+        "home_suspension_impact": 0.03,
+        "away_suspension_impact": 0.08,
+        "weather_disruption": 0.15,
+        "venue_home_familiarity": 0.02,
+        "home_card_tendency": 0.44,
+        "away_card_tendency": 0.50,
+        "home_set_piece_edge": 0.57,
+        "away_set_piece_edge": 0.53,
+        "live_home_red_cards": 1,
+        "live_away_red_cards": 0,
+        "live_home_yellow_cards": 2,
+        "live_away_yellow_cards": 1,
+        "is_live": false
+      }
+    }
+  ],
+  "historical_results": [
+    {
+      "match_id": "lol-001",
+      "market_id": "bet365-lol-001-home-ml",
+      "actual_side": "home",
+      "closing_decimal_odds": 1.88
+    },
+    {
+      "match_id": "valorant-001",
+      "market_id": "bet365-valorant-001-home-ml",
+      "actual_side": "away",
+      "closing_decimal_odds": 2.00
+    },
+    {
+      "match_id": "cs2-001",
+      "market_id": "bet365-cs2-001-home-ml",
+      "actual_side": "home",
+      "closing_decimal_odds": 2.05
+    },
+    {
+      "match_id": "football-001",
+      "market_id": "bet365-football-001-home-ml",
+      "actual_side": "home",
+      "closing_decimal_odds": 2.00
+    }
+  ]
+}
