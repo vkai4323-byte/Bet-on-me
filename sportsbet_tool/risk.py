@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from sportsbet_tool.models import BetRecommendation, MarketOdds, Prediction
 from sportsbet_tool.odds import decimal_kelly_fraction, expected_value, implied_probability
+
+RiskMode = Literal["insurance", "steady", "adventurous", "wild"]
 
 
 @dataclass(slots=True)
@@ -15,6 +18,7 @@ class RiskConfig:
     pause_after_consecutive_losses: int = 5
     min_stake: float = 0.0
     min_quality_score: float = 0.55
+    mode: RiskMode = "steady"
 
     def validate(self) -> None:
         if not 0.0 < self.kelly_fraction <= 1.0:
@@ -27,6 +31,59 @@ class RiskConfig:
             raise ValueError("min_edge cannot be negative")
         if not 0.0 <= self.min_quality_score <= 1.0:
             raise ValueError("min_quality_score must be between 0 and 1")
+
+
+MODE_CONFIGS: dict[RiskMode, RiskConfig] = {
+    "insurance": RiskConfig(
+        kelly_fraction=0.2,
+        max_single_bet_fraction=0.006,
+        max_daily_risk_fraction=0.018,
+        min_edge=0.04,
+        pause_after_consecutive_losses=2,
+        min_quality_score=0.78,
+        mode="insurance",
+    ),
+    "steady": RiskConfig(
+        kelly_fraction=0.5,
+        max_single_bet_fraction=0.02,
+        max_daily_risk_fraction=0.05,
+        min_edge=0.015,
+        pause_after_consecutive_losses=5,
+        min_quality_score=0.55,
+        mode="steady",
+    ),
+    "adventurous": RiskConfig(
+        kelly_fraction=0.75,
+        max_single_bet_fraction=0.035,
+        max_daily_risk_fraction=0.09,
+        min_edge=0.008,
+        pause_after_consecutive_losses=7,
+        min_quality_score=0.45,
+        mode="adventurous",
+    ),
+    "wild": RiskConfig(
+        kelly_fraction=1.0,
+        max_single_bet_fraction=0.06,
+        max_daily_risk_fraction=0.16,
+        min_edge=0.0,
+        pause_after_consecutive_losses=10,
+        min_quality_score=0.35,
+        mode="wild",
+    ),
+}
+
+
+def risk_config_for_mode(mode: RiskMode) -> RiskConfig:
+    config = MODE_CONFIGS[mode]
+    return RiskConfig(
+        kelly_fraction=config.kelly_fraction,
+        max_single_bet_fraction=config.max_single_bet_fraction,
+        max_daily_risk_fraction=config.max_daily_risk_fraction,
+        min_edge=config.min_edge,
+        pause_after_consecutive_losses=config.pause_after_consecutive_losses,
+        min_quality_score=config.min_quality_score,
+        mode=config.mode,
+    )
 
 
 class BankrollStrategy:

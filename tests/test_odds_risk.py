@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from sportsbet_tool.models import MarketOdds, Prediction
 from sportsbet_tool.odds import decimal_kelly_fraction, expected_value, implied_probability, no_vig_probabilities_by_market
-from sportsbet_tool.risk import BankrollStrategy, RiskConfig
+from sportsbet_tool.risk import BankrollStrategy, RiskConfig, risk_config_for_mode
 
 
 class OddsRiskTests(unittest.TestCase):
@@ -82,6 +82,23 @@ class OddsRiskTests(unittest.TestCase):
         self.assertEqual(recommendation.status, "skipped")
         self.assertEqual(recommendation.quality_score, 0.4)
         self.assertIn("quality_below_threshold", recommendation.reasons)
+
+    def test_risk_modes_scale_exposure(self):
+        insurance = risk_config_for_mode("insurance")
+        steady = risk_config_for_mode("steady")
+        adventurous = risk_config_for_mode("adventurous")
+        wild = risk_config_for_mode("wild")
+        self.assertLess(insurance.max_single_bet_fraction, steady.max_single_bet_fraction)
+        self.assertLess(steady.max_single_bet_fraction, adventurous.max_single_bet_fraction)
+        self.assertLess(adventurous.max_single_bet_fraction, wild.max_single_bet_fraction)
+        self.assertGreater(insurance.min_quality_score, wild.min_quality_score)
+
+    def test_wild_mode_can_stake_more_than_steady(self):
+        prediction = Prediction("m1", "test", "home", 0.7, 0.6, 0.8, {})
+        odds = MarketOdds("m1", "bet365", "moneyline", "home", 2.0, datetime.now(timezone.utc))
+        steady = BankrollStrategy(risk_config_for_mode("steady")).recommend(prediction, odds, bankroll=1000)
+        wild = BankrollStrategy(risk_config_for_mode("wild")).recommend(prediction, odds, bankroll=1000)
+        self.assertGreater(wild.stake, steady.stake)
 
 
 if __name__ == "__main__":

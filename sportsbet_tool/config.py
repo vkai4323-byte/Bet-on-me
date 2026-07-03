@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from sportsbet_tool.risk import RiskConfig
+from sportsbet_tool.risk import RiskConfig, risk_config_for_mode
 
 
 @dataclass(slots=True)
@@ -29,18 +29,21 @@ def load_config(path: str | Path | None = None) -> AppConfig:
     risk = data.get("risk", {})
     compliance = data.get("compliance", {})
     web_bridge = data.get("web_bridge", {})
+    risk_mode = risk.get("mode", "steady")
+    risk_config = risk_config_for_mode(risk_mode)
+    risk_config.kelly_fraction = float(risk.get("kelly_fraction", risk_config.kelly_fraction))
+    risk_config.max_single_bet_fraction = float(risk.get("max_single_bet_fraction", risk_config.max_single_bet_fraction))
+    risk_config.max_daily_risk_fraction = float(risk.get("max_daily_risk_fraction", risk_config.max_daily_risk_fraction))
+    risk_config.min_edge = float(risk.get("min_edge", risk_config.min_edge))
+    risk_config.pause_after_consecutive_losses = int(
+        risk.get("pause_after_consecutive_losses", risk_config.pause_after_consecutive_losses)
+    )
+    risk_config.min_quality_score = float(risk.get("min_quality_score", risk_config.min_quality_score))
     return AppConfig(
         bankroll_amount=float(bankroll.get("starting_amount", 1000.0)),
         currency=bankroll.get("currency", "USD"),
         default_bookmaker=markets.get("default_bookmaker", "bet365"),
-        risk=RiskConfig(
-            kelly_fraction=float(risk.get("kelly_fraction", 0.5)),
-            max_single_bet_fraction=float(risk.get("max_single_bet_fraction", 0.02)),
-            max_daily_risk_fraction=float(risk.get("max_daily_risk_fraction", 0.05)),
-            min_edge=float(risk.get("min_edge", 0.015)),
-            pause_after_consecutive_losses=int(risk.get("pause_after_consecutive_losses", 5)),
-            min_quality_score=float(risk.get("min_quality_score", 0.55)),
-        ),
+        risk=risk_config,
         jurisdiction_confirmed=bool(compliance.get("jurisdiction_confirmed", False)),
         allow_final_submit_automation=bool(compliance.get("allow_final_submit_automation", False)),
         web_bridge_endpoint=web_bridge.get("endpoint", "http://127.0.0.1:10086/command"),

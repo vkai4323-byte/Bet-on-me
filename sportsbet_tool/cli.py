@@ -23,7 +23,7 @@ from sportsbet_tool.modeling import HeuristicProbabilityModel
 from sportsbet_tool.models import clean_dict
 from sportsbet_tool.odds import no_vig_probabilities_by_market
 from sportsbet_tool.quality import FeatureQualityAnalyzer
-from sportsbet_tool.risk import BankrollStrategy
+from sportsbet_tool.risk import BankrollStrategy, RiskMode, risk_config_for_mode
 
 ROOT = Path(__file__).resolve().parent.parent
 EXAMPLES = ROOT / "examples"
@@ -37,17 +37,22 @@ def main(argv: list[str] | None = None) -> int:
     demo = sub.add_parser("demo-predict", help="Run predictions on bundled sample data.")
     demo.add_argument("--bankroll", type=float, default=None)
     demo.add_argument("--active-only", action="store_true", help="Only print recommended bets.")
+    demo.add_argument("--risk-mode", choices=["insurance", "steady", "adventurous", "wild"], default=None)
 
     backtest = sub.add_parser("backtest", help="Run bundled historical sample backtest.")
     backtest.add_argument("--bankroll", type=float, default=None)
+    backtest.add_argument("--risk-mode", choices=["insurance", "steady", "adventurous", "wild"], default=None)
 
     slip = sub.add_parser("prepare-slip", help="Open sportsbook page and prepare manual bet-slip instructions.")
     slip.add_argument("--url", required=True)
     slip.add_argument("--stake-selector", default=None)
     slip.add_argument("--bankroll", type=float, default=None)
+    slip.add_argument("--risk-mode", choices=["insurance", "steady", "adventurous", "wild"], default=None)
 
     args = parser.parse_args(argv)
     config = load_config(args.config)
+    if getattr(args, "risk_mode", None):
+        config.risk = risk_config_for_mode(args.risk_mode)
     bankroll = args.bankroll if getattr(args, "bankroll", None) is not None else config.bankroll_amount
 
     if args.command == "demo-predict":

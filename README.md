@@ -57,6 +57,15 @@ Only print active recommendations:
 C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --active-only
 ```
 
+Compare bankroll modes:
+
+```powershell
+C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --risk-mode insurance --active-only
+C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --risk-mode steady --active-only
+C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --risk-mode adventurous --active-only
+C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --risk-mode wild --active-only
+```
+
 Run the sample backtest:
 
 ```powershell
@@ -68,9 +77,28 @@ Use it from another Agent/tool host:
 ```python
 from sportsbet_tool.tool_api import predict_sample, backtest_sample
 
-prediction_payload = predict_sample(bankroll=1000, active_only=True)
+prediction_payload = predict_sample(bankroll=1000, active_only=True, risk_mode="steady")
 backtest_payload = backtest_sample(bankroll=1000)
 ```
+
+## Factor Weights and Risk Modes
+
+The baseline model keeps factor weights in `sportsbet_tool/weighting.py`.
+
+Weight groups:
+
+- Strength: Elo, rolling Elo, opponent-strength adjustment, sample size.
+- Esports: patch fit, meta pool overlap, player style, hero/agent/map pool, H2H, BP fit, synergy.
+- Football: motivation, schedule pressure, injuries, suspensions, referee bias, weather, venue, cards, set pieces.
+
+Weights are not meant to stay fixed forever. `FactorWeights.update_from_outcome()` supports light post-match adjustment: factors that pointed in the right direction are nudged up, factors that pointed the wrong way are nudged down, with learning-rate and multiplier bounds. For production, keep separate weights by sport, league, market type, and model version.
+
+Risk modes:
+
+- `insurance`: high edge and quality threshold, small stakes, pauses quickly after losses.
+- `steady`: default balanced mode, 0.5 Kelly, 2 percent single-bet cap, 5 percent daily cap.
+- `adventurous`: lower edge threshold and higher exposure for stronger opinions.
+- `wild`: full Kelly with large caps; useful for simulation stress tests, not recommended as a default real-money mode.
 
 Run tests:
 
