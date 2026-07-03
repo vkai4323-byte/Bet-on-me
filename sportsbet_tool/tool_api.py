@@ -5,6 +5,7 @@ from typing import Any
 
 from sportsbet_tool.cli import _build_portfolio_planner, _build_recommendations, _load_example_bundle
 from sportsbet_tool.config import load_config
+from sportsbet_tool.intent import parse_intent
 from sportsbet_tool.models import clean_dict
 from sportsbet_tool.odds import no_vig_probabilities_by_market
 from sportsbet_tool.quality import FeatureQualityAnalyzer
@@ -88,4 +89,36 @@ def backtest_sample(
     payload["bookmaker"] = config.default_bookmaker
     payload["risk_mode"] = config.risk.mode
     payload["manual_confirmation_required"] = True
+    return payload
+
+
+def run_intent(
+    text: str,
+    bankroll: float | None = None,
+    config_path: str | None = None,
+    risk_mode: RiskMode | None = None,
+) -> dict[str, Any]:
+    """Infer tool settings from a natural-language request."""
+
+    intent = parse_intent(text)
+    config = load_config(config_path)
+    selected_bankroll = bankroll if bankroll is not None else intent.bankroll
+    selected_bankroll = selected_bankroll if selected_bankroll is not None else config.bankroll_amount
+    selected_risk_mode = risk_mode or intent.risk_mode
+    if intent.command == "backtest":
+        payload = backtest_sample(bankroll=selected_bankroll, config_path=config_path, risk_mode=selected_risk_mode)
+    else:
+        payload = predict_sample(
+            bankroll=selected_bankroll,
+            config_path=config_path,
+            active_only=intent.active_only,
+            risk_mode=selected_risk_mode,
+        )
+    payload["interpreted_intent"] = {
+        "command": intent.command,
+        "bankroll": selected_bankroll,
+        "risk_mode": selected_risk_mode,
+        "active_only": intent.active_only,
+        "reasons": intent.reasons,
+    }
     return payload

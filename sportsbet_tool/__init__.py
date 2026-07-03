@@ -12,6 +12,7 @@ from sportsbet_tool.models import (
     Prediction,
 )
 from sportsbet_tool.ensemble import ModelDebatePredictor
+from sportsbet_tool.intent import IntentSettings, parse_intent
 from sportsbet_tool.portfolio import PortfolioPlanner
 
 __all__ = [
@@ -26,4 +27,6 @@ __all__ = [
     "PlayerRatingSnapshot",
     "PortfolioPlanner",
     "Prediction",
+    "IntentSettings",
+    "parse_intent",
 ]

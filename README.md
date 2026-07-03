@@ -50,31 +50,38 @@ This project is built around three guardrails:
 
 ## Quick Start
 
-Run the demo prediction:
+In Codex, use plain language first:
 
-```powershell
-C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000
+```text
+帮我保守看一下有没有值得押的，1000本金。
 ```
 
-Only print active recommendations:
-
-```powershell
-C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --active-only
+```text
+激进一点跑个回测，用 2k 资金。
 ```
 
-Compare bankroll modes:
-
-```powershell
-C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --risk-mode insurance --active-only
-C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --risk-mode steady --active-only
-C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --risk-mode adventurous --active-only
-C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --risk-mode wild --active-only
+```text
+把全部候选都给我看，不只看推荐。
 ```
 
-Run the sample backtest:
+The `sportsbet-assistant` Codex skill maps wording such as `稳一点`, `激进`, `梭哈`, `回测`, `全部`, and `500本金` into tool settings automatically.
+
+From this folder, the shortest manual prediction command is:
 
 ```powershell
-C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli backtest --bankroll 1000
+.\bet.ps1
+```
+
+Natural-language CLI fallback:
+
+```powershell
+.\bet.ps1 ask "帮我稳一点，500本金，只看推荐"
+```
+
+Backtest shortcut:
+
+```powershell
+.\bet.ps1 ask "激进一点跑个回测，用2k资金"
 ```
 
 Prediction output now includes:
@@ -88,8 +95,9 @@ Prediction output now includes:
 Use it from another Agent/tool host:
 
 ```python
-from sportsbet_tool.tool_api import predict_sample, backtest_sample
+from sportsbet_tool.tool_api import run_intent, predict_sample, backtest_sample
 
+payload = run_intent("帮我保守看一下有没有值得押的，1000本金")
 prediction_payload = predict_sample(bankroll=1000, active_only=True, risk_mode="steady")
 backtest_payload = backtest_sample(bankroll=1000)
 ```
