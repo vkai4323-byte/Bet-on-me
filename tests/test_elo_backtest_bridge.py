@@ -54,10 +54,15 @@ class EloBacktestBridgeTests(unittest.TestCase):
 
     def test_tool_api_returns_json_payloads(self):
         predictions = predict_sample(bankroll=1000)
+        active_predictions = predict_sample(bankroll=1000, active_only=True)
         backtest = backtest_sample(bankroll=1000)
         self.assertEqual(predictions["bookmaker"], "bet365")
         self.assertTrue(predictions["manual_confirmation_required"])
         self.assertGreaterEqual(len(predictions["recommendations"]), 1)
+        recommended = [item for item in predictions["recommendations"] if item["status"] == "recommended"]
+        self.assertEqual(len(recommended), 4)
+        self.assertEqual(len(active_predictions["recommendations"]), 4)
+        self.assertTrue(all(item["status"] == "recommended" for item in active_predictions["recommendations"]))
         self.assertEqual(backtest["bookmaker"], "bet365")
         self.assertTrue(backtest["manual_confirmation_required"])
 

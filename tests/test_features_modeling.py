@@ -3,6 +3,7 @@ import unittest
 from sportsbet_tool.cli import _load_example_bundle
 from sportsbet_tool.features import FeatureBuilder
 from sportsbet_tool.modeling import HeuristicProbabilityModel
+from sportsbet_tool.quality import FeatureQualityAnalyzer
 
 
 class FeatureModelingTests(unittest.TestCase):
@@ -51,6 +52,15 @@ class FeatureModelingTests(unittest.TestCase):
         self.assertLess(prediction.probability, 0.97)
         self.assertLessEqual(prediction.confidence_low, prediction.probability)
         self.assertGreaterEqual(prediction.confidence_high, prediction.probability)
+
+    def test_quality_analyzer_flags_missing_core_factors(self):
+        bundle = _load_example_bundle()
+        match = bundle["matches"]["football-001"]
+        odds = bundle["odds"]["bet365-football-001-home-ml"]
+        vector = FeatureBuilder().build(match, odds)
+        report = FeatureQualityAnalyzer().score(vector)
+        self.assertLess(report.score, 1.0)
+        self.assertTrue(any(reason.startswith("missing_core_factors:") for reason in report.reasons))
 
 
 if __name__ == "__main__":

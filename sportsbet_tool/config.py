@@ -39,6 +39,7 @@ def load_config(path: str | Path | None = None) -> AppConfig:
             max_daily_risk_fraction=float(risk.get("max_daily_risk_fraction", 0.05)),
             min_edge=float(risk.get("min_edge", 0.015)),
             pause_after_consecutive_losses=int(risk.get("pause_after_consecutive_losses", 5)),
+            min_quality_score=float(risk.get("min_quality_score", 0.55)),
         ),
         jurisdiction_confirmed=bool(compliance.get("jurisdiction_confirmed", False)),
         allow_final_submit_automation=bool(compliance.get("allow_final_submit_automation", False)),

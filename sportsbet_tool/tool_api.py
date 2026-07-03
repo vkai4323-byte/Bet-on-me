@@ -6,13 +6,17 @@ from typing import Any
 from sportsbet_tool.cli import _build_recommendations, _load_example_bundle
 from sportsbet_tool.config import load_config
 from sportsbet_tool.models import clean_dict
+from sportsbet_tool.odds import no_vig_probabilities_by_market
+from sportsbet_tool.quality import FeatureQualityAnalyzer
 
 
-def predict_sample(bankroll: float = 1000.0, config_path: str | None = None) -> dict[str, Any]:
+def predict_sample(bankroll: float = 1000.0, config_path: str | None = None, active_only: bool = False) -> dict[str, Any]:
     """Agent-friendly JSON API for running the bundled prediction scenario."""
 
     config = load_config(config_path)
     recommendations = _build_recommendations(_load_example_bundle(), bankroll, config)
+    if active_only:
+        recommendations = [item for item in recommendations if item.status == "recommended"]
     return {
         "bookmaker": config.default_bookmaker,
         "bankroll": bankroll,
@@ -32,24 +36,31 @@ def backtest_sample(bankroll: float = 1000.0, config_path: str | None = None) ->
     from sportsbet_tool.risk import BankrollStrategy
 
     builder = FeatureBuilder()
+    quality = FeatureQualityAnalyzer()
+    fair_probabilities = no_vig_probabilities_by_market(bundle["odds"].values())
     samples: list[BacktestSample] = []
     for row in bundle["historical_results"]:
         match = bundle["matches"][row["match_id"]]
         odds = bundle["odds"][row["market_id"]]
+        vector = builder.build(
+            match=match,
+            odds=odds,
+            player_ratings=bundle["ratings"],
+            esports_styles=bundle["styles"],
+            patch_meta=bundle["patch_meta_by_match"].get(match.match_id),
+            football_context=bundle["football_context_by_match"].get(match.match_id),
+        )
+        quality_report = quality.score(vector)
         samples.append(
             BacktestSample(
                 start_time=match.start_time,
-                vector=builder.build(
-                    match=match,
-                    odds=odds,
-                    player_ratings=bundle["ratings"],
-                    esports_styles=bundle["styles"],
-                    patch_meta=bundle["patch_meta_by_match"].get(match.match_id),
-                    football_context=bundle["football_context_by_match"].get(match.match_id),
-                ),
+                vector=vector,
                 odds=odds,
                 actual_side=row["actual_side"],
                 closing_decimal_odds=row.get("closing_decimal_odds"),
+                fair_implied_probability=fair_probabilities.get(odds.market_id or ""),
+                quality_score=quality_report.score,
+                quality_reasons=quality_report.reasons,
             )
         )
     result = BacktestEngine(strategy=BankrollStrategy(config.risk)).run(samples, bankroll)

@@ -16,6 +16,9 @@ class BacktestSample:
     odds: MarketOdds
     actual_side: str
     closing_decimal_odds: float | None = None
+    fair_implied_probability: float | None = None
+    quality_score: float = 1.0
+    quality_reasons: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -71,6 +74,9 @@ class BacktestEngine:
                 bankroll,
                 daily_risk_used=daily_risk_used,
                 consecutive_losses=consecutive_losses,
+                fair_implied_probability=sample.fair_implied_probability,
+                quality_score=sample.quality_score,
+                quality_reasons=sample.quality_reasons,
             )
             recommendations.append(recommendation)
             self._add_calibration_sample(buckets, prediction.probability, sample.actual_side == sample.odds.side)

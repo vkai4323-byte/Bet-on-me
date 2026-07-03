@@ -190,6 +190,8 @@ class BetRecommendation:
     status: str
     reasons: list[str] = field(default_factory=list)
     requires_manual_confirmation: bool = True
+    book_implied_probability: float | None = None
+    quality_score: float = 1.0
 
 
 @dataclass(slots=True)

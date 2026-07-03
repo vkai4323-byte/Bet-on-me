@@ -14,6 +14,7 @@ class RiskConfig:
     min_edge: float = 0.015
     pause_after_consecutive_losses: int = 5
     min_stake: float = 0.0
+    min_quality_score: float = 0.55
 
     def validate(self) -> None:
         if not 0.0 < self.kelly_fraction <= 1.0:
@@ -24,6 +25,8 @@ class RiskConfig:
             raise ValueError("max_daily_risk_fraction must be in (0, 1]")
         if self.min_edge < 0:
             raise ValueError("min_edge cannot be negative")
+        if not 0.0 <= self.min_quality_score <= 1.0:
+            raise ValueError("min_quality_score must be between 0 and 1")
 
 
 class BankrollStrategy:
@@ -38,6 +41,9 @@ class BankrollStrategy:
         bankroll: float,
         daily_risk_used: float = 0.0,
         consecutive_losses: int = 0,
+        fair_implied_probability: float | None = None,
+        quality_score: float = 1.0,
+        quality_reasons: list[str] | None = None,
     ) -> BetRecommendation:
         if bankroll <= 0:
             raise ValueError("bankroll must be positive")
@@ -46,7 +52,12 @@ class BankrollStrategy:
         if prediction.target_side != odds.side:
             raise ValueError("prediction target side and odds side must match")
 
-        imp = implied_probability(odds.decimal_odds)
+        if fair_implied_probability is not None and not 0.0 < fair_implied_probability < 1.0:
+            raise ValueError("fair_implied_probability must be in (0, 1)")
+        quality_score = min(max(quality_score, 0.0), 1.0)
+
+        book_imp = implied_probability(odds.decimal_odds)
+        imp = fair_implied_probability if fair_implied_probability is not None else book_imp
         edge = prediction.probability - imp
         ev = expected_value(prediction.probability, odds.decimal_odds)
         raw_kelly = decimal_kelly_fraction(prediction.probability, odds.decimal_odds)
@@ -69,9 +80,23 @@ class BankrollStrategy:
             status = "skipped"
             applied_fraction = 0.0
 
+        if fair_implied_probability is not None:
+            reasons.append("no_vig_implied_probability")
+
+        if quality_score < self.config.min_quality_score:
+            reasons.append("quality_below_threshold")
+            status = "skipped"
+            applied_fraction = 0.0
+        elif quality_score < 0.95:
+            reasons.append("quality_scaled_stake")
+
+        for reason in quality_reasons or []:
+            if reason not in reasons:
+                reasons.append(reason)
+
         single_cap = bankroll * self.config.max_single_bet_fraction
         daily_cap_remaining = max(0.0, bankroll * self.config.max_daily_risk_fraction - daily_risk_used)
-        uncapped_stake = bankroll * applied_fraction
+        uncapped_stake = bankroll * applied_fraction * quality_score
         stake = max(0.0, min(uncapped_stake, single_cap, daily_cap_remaining))
 
         if daily_cap_remaining <= 0 and status == "recommended":
@@ -104,6 +129,8 @@ class BankrollStrategy:
             status=status,
             reasons=reasons,
             requires_manual_confirmation=True,
+            book_implied_probability=book_imp,
+            quality_score=quality_score,
         )
 
     @staticmethod

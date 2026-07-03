@@ -25,10 +25,15 @@ This project is built around three guardrails:
   - Stable interfaces for future scikit-learn or gradient boosting models.
 - Bankroll:
   - Decimal odds.
+  - No-vig fair probability when both sides of a market are available.
   - 0.5 fractional Kelly default.
   - 2 percent max stake per bet.
   - 5 percent daily risk cap.
   - Consecutive-loss pause.
+- Data quality:
+  - Core factor coverage checks by sport.
+  - Low sample, weak patch data, and missing factor penalties.
+  - Stake scaling or skipping when evidence quality is low.
 - Backtesting:
   - Time-ordered simulation.
   - ROI, hit rate, max drawdown, CLV, calibration buckets.
@@ -46,6 +51,12 @@ Run the demo prediction:
 C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000
 ```
 
+Only print active recommendations:
+
+```powershell
+C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli demo-predict --bankroll 1000 --active-only
+```
+
 Run the sample backtest:
 
 ```powershell
@@ -57,7 +68,7 @@ Use it from another Agent/tool host:
 ```python
 from sportsbet_tool.tool_api import predict_sample, backtest_sample
 
-prediction_payload = predict_sample(bankroll=1000)
+prediction_payload = predict_sample(bankroll=1000, active_only=True)
 backtest_payload = backtest_sample(bankroll=1000)
 ```
 
@@ -72,6 +83,13 @@ C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\p
 The first version is free/public-source first. Production use should add source-specific adapters under `sportsbet_tool/data_ingestion.py` and persist immutable raw snapshots before feature generation.
 
 Do not use live or in-play events in a pre-match model. The feature builder filters snapshots by `observed_at` and keeps pre-match football context separate from live match state.
+
+Recommended collection priority:
+
+- Odds: full market outcome sets, opening odds, current odds, closing odds, line movement, suspended markets.
+- Esports: roster, patch, map veto/BP, player style, champion/agent/map pool, head-to-head, role swaps, LAN/online context.
+- Football: lineups, injuries, suspensions, referee profile, motivation, weather, venue, rest days, travel, cards, xG-style team quality.
+- Quality: source timestamp, sample size, source reliability, and whether the factor was known before the market snapshot.
 
 ## Safety Notes
 

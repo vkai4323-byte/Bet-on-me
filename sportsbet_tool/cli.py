@@ -21,6 +21,8 @@ from sportsbet_tool.execution_bridge import Bet365SportsbookAdapter, WebBridgeCl
 from sportsbet_tool.features import FeatureBuilder
 from sportsbet_tool.modeling import HeuristicProbabilityModel
 from sportsbet_tool.models import clean_dict
+from sportsbet_tool.odds import no_vig_probabilities_by_market
+from sportsbet_tool.quality import FeatureQualityAnalyzer
 from sportsbet_tool.risk import BankrollStrategy
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -34,6 +36,7 @@ def main(argv: list[str] | None = None) -> int:
 
     demo = sub.add_parser("demo-predict", help="Run predictions on bundled sample data.")
     demo.add_argument("--bankroll", type=float, default=None)
+    demo.add_argument("--active-only", action="store_true", help="Only print recommended bets.")
 
     backtest = sub.add_parser("backtest", help="Run bundled historical sample backtest.")
     backtest.add_argument("--bankroll", type=float, default=None)
@@ -48,7 +51,7 @@ def main(argv: list[str] | None = None) -> int:
     bankroll = args.bankroll if getattr(args, "bankroll", None) is not None else config.bankroll_amount
 
     if args.command == "demo-predict":
-        return _demo_predict(bankroll, config)
+        return _demo_predict(bankroll, config, active_only=args.active_only)
     if args.command == "backtest":
         return _backtest(bankroll, config)
     if args.command == "prepare-slip":
@@ -56,17 +59,21 @@ def main(argv: list[str] | None = None) -> int:
     return 2
 
 
-def _demo_predict(bankroll: float, config: Any) -> int:
+def _demo_predict(bankroll: float, config: Any, active_only: bool = False) -> int:
     bundle = _load_example_bundle()
     recommendations = _build_recommendations(bundle, bankroll, config)
+    if active_only:
+        recommendations = [item for item in recommendations if item.status == "recommended"]
     print(json.dumps([clean_dict(item) for item in recommendations], indent=2, ensure_ascii=False))
     return 0
 
 
 def _backtest(bankroll: float, config: Any) -> int:
     bundle = _load_example_bundle()
+    fair_probabilities = no_vig_probabilities_by_market(bundle["odds"].values())
     samples: list[BacktestSample] = []
     builder = FeatureBuilder()
+    quality = FeatureQualityAnalyzer()
     for row in bundle["historical_results"]:
         match = bundle["matches"][row["match_id"]]
         odds = bundle["odds"][row["market_id"]]
@@ -78,6 +85,7 @@ def _backtest(bankroll: float, config: Any) -> int:
             patch_meta=bundle["patch_meta_by_match"].get(match.match_id),
             football_context=bundle["football_context_by_match"].get(match.match_id),
         )
+        quality_report = quality.score(vector)
         samples.append(
             BacktestSample(
                 start_time=match.start_time,
@@ -85,6 +93,9 @@ def _backtest(bankroll: float, config: Any) -> int:
                 odds=odds,
                 actual_side=row["actual_side"],
                 closing_decimal_odds=row.get("closing_decimal_odds"),
+                fair_implied_probability=fair_probabilities.get(odds.market_id or ""),
+                quality_score=quality_report.score,
+                quality_reasons=quality_report.reasons,
             )
         )
     result = BacktestEngine(strategy=BankrollStrategy(config.risk)).run(samples, bankroll)
@@ -108,12 +119,20 @@ def _build_recommendations(bundle: dict[str, Any], bankroll: float, config: Any)
     builder = FeatureBuilder()
     model = HeuristicProbabilityModel()
     strategy = BankrollStrategy(config.risk)
+    quality = FeatureQualityAnalyzer()
     recommendations = []
     daily_risk = 0.0
-    for odds in bundle["odds"].values():
+    current_day: str | None = None
+    default_odds = [odds for odds in bundle["odds"].values() if odds.bookmaker == config.default_bookmaker]
+    fair_probabilities = no_vig_probabilities_by_market(default_odds)
+    for odds in sorted(default_odds, key=lambda item: bundle["matches"][item.match_id].start_time):
         if odds.bookmaker != config.default_bookmaker:
             continue
         match = bundle["matches"][odds.match_id]
+        match_day = match.start_time.date().isoformat()
+        if match_day != current_day:
+            current_day = match_day
+            daily_risk = 0.0
         vector = builder.build(
             match=match,
             odds=odds,
@@ -122,8 +141,17 @@ def _build_recommendations(bundle: dict[str, Any], bankroll: float, config: Any)
             patch_meta=bundle["patch_meta_by_match"].get(match.match_id),
             football_context=bundle["football_context_by_match"].get(match.match_id),
         )
+        quality_report = quality.score(vector)
         prediction = model.predict_vector(vector)
-        recommendation = strategy.recommend(prediction, odds, bankroll, daily_risk_used=daily_risk)
+        recommendation = strategy.recommend(
+            prediction,
+            odds,
+            bankroll,
+            daily_risk_used=daily_risk,
+            fair_implied_probability=fair_probabilities.get(odds.market_id or ""),
+            quality_score=quality_report.score,
+            quality_reasons=quality_report.reasons,
+        )
         if recommendation.status == "recommended":
             daily_risk += recommendation.stake
         recommendations.append(recommendation)

@@ -71,12 +71,30 @@
       "observed_at": "2026-07-09T10:00:00+00:00"
     },
     {
+      "match_id": "lol-001",
+      "market_id": "bet365-lol-001-away-ml",
+      "bookmaker": "bet365",
+      "market_type": "moneyline",
+      "side": "away",
+      "decimal_odds": 1.95,
+      "observed_at": "2026-07-09T10:00:00+00:00"
+    },
+    {
       "match_id": "valorant-001",
       "market_id": "bet365-valorant-001-home-ml",
       "bookmaker": "bet365",
       "market_type": "moneyline",
       "side": "home",
       "decimal_odds": 2.05,
+      "observed_at": "2026-07-10T12:00:00+00:00"
+    },
+    {
+      "match_id": "valorant-001",
+      "market_id": "bet365-valorant-001-away-ml",
+      "bookmaker": "bet365",
+      "market_type": "moneyline",
+      "side": "away",
+      "decimal_odds": 1.80,
       "observed_at": "2026-07-10T12:00:00+00:00"
     },
     {
@@ -89,12 +107,30 @@
       "observed_at": "2026-07-11T15:00:00+00:00"
     },
     {
+      "match_id": "cs2-001",
+      "market_id": "bet365-cs2-001-away-ml",
+      "bookmaker": "bet365",
+      "market_type": "moneyline",
+      "side": "away",
+      "decimal_odds": 1.76,
+      "observed_at": "2026-07-11T15:00:00+00:00"
+    },
+    {
       "match_id": "football-001",
       "market_id": "bet365-football-001-home-ml",
       "bookmaker": "bet365",
       "market_type": "moneyline",
       "side": "home",
       "decimal_odds": 2.08,
+      "observed_at": "2026-07-12T20:00:00+00:00"
+    },
+    {
+      "match_id": "football-001",
+      "market_id": "bet365-football-001-away-ml",
+      "bookmaker": "bet365",
+      "market_type": "moneyline",
+      "side": "away",
+      "decimal_odds": 1.86,
       "observed_at": "2026-07-12T20:00:00+00:00"
     }
   ],

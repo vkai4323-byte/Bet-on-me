@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import Any
+
+from sportsbet_tool.models import MarketOdds
 
 
 def validate_decimal_odds(decimal_odds: float) -> None:
@@ -19,6 +22,35 @@ def no_vig_probabilities(decimal_odds_values: Iterable[float]) -> list[float]:
     if total <= 0:
         raise ValueError("odds set has no probability mass")
     return [value / total for value in raw]
+
+
+def market_group_key(odds: MarketOdds) -> tuple[Any, ...]:
+    return (
+        odds.match_id,
+        odds.bookmaker.lower(),
+        odds.market_type,
+        odds.line,
+        odds.observed_at,
+    )
+
+
+def no_vig_probabilities_by_market(odds_items: Iterable[MarketOdds]) -> dict[str, float]:
+    grouped: dict[tuple[Any, ...], list[MarketOdds]] = {}
+    for odds in odds_items:
+        grouped.setdefault(market_group_key(odds), []).append(odds)
+
+    probabilities: dict[str, float] = {}
+    for outcomes in grouped.values():
+        if len(outcomes) < 2:
+            for odds in outcomes:
+                if odds.market_id:
+                    probabilities[odds.market_id] = implied_probability(odds.decimal_odds)
+            continue
+        fair = no_vig_probabilities(item.decimal_odds for item in outcomes)
+        for odds, probability in zip(outcomes, fair, strict=True):
+            if odds.market_id:
+                probabilities[odds.market_id] = probability
+    return probabilities
 
 
 def expected_value(model_probability: float, decimal_odds: float) -> float:

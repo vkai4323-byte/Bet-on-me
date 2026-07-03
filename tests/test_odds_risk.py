@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timezone
 
 from sportsbet_tool.models import MarketOdds, Prediction
-from sportsbet_tool.odds import decimal_kelly_fraction, expected_value, implied_probability
+from sportsbet_tool.odds import decimal_kelly_fraction, expected_value, implied_probability, no_vig_probabilities_by_market
 from sportsbet_tool.risk import BankrollStrategy, RiskConfig
 
 
@@ -37,6 +37,22 @@ class OddsRiskTests(unittest.TestCase):
         self.assertLessEqual(recommendation.stake, 20.0)
         self.assertTrue(recommendation.requires_manual_confirmation)
 
+    def test_strategy_uses_no_vig_implied_probability(self):
+        observed_at = datetime.now(timezone.utc)
+        odds = MarketOdds("m1", "bet365", "moneyline", "home", 2.0, observed_at, market_id="home")
+        away = MarketOdds("m1", "bet365", "moneyline", "away", 1.8, observed_at, market_id="away")
+        fair = no_vig_probabilities_by_market([odds, away])
+        prediction = Prediction("m1", "test", "home", 0.55, 0.5, 0.7, {})
+        recommendation = BankrollStrategy(RiskConfig()).recommend(
+            prediction,
+            odds,
+            bankroll=1000,
+            fair_implied_probability=fair["home"],
+        )
+        self.assertAlmostEqual(recommendation.book_implied_probability, 0.5)
+        self.assertAlmostEqual(recommendation.implied_probability, fair["home"])
+        self.assertIn("no_vig_implied_probability", recommendation.reasons)
+
     def test_consecutive_losses_pause(self):
         prediction = Prediction("m1", "test", "home", 0.7, 0.6, 0.8, {})
         odds = MarketOdds("m1", "bet365", "moneyline", "home", 2.0, datetime.now(timezone.utc))
@@ -52,6 +68,20 @@ class OddsRiskTests(unittest.TestCase):
         recommendation = strategy.recommend(prediction, odds, bankroll=1000, daily_risk_used=50)
         self.assertEqual(recommendation.status, "skipped")
         self.assertIn("daily_risk_cap_reached", recommendation.reasons)
+
+    def test_low_quality_skips_recommendation(self):
+        prediction = Prediction("m1", "test", "home", 0.7, 0.6, 0.8, {})
+        odds = MarketOdds("m1", "bet365", "moneyline", "home", 2.0, datetime.now(timezone.utc))
+        recommendation = BankrollStrategy(RiskConfig(min_quality_score=0.55)).recommend(
+            prediction,
+            odds,
+            bankroll=1000,
+            quality_score=0.4,
+            quality_reasons=["missing_core_factors:elo_delta"],
+        )
+        self.assertEqual(recommendation.status, "skipped")
+        self.assertEqual(recommendation.quality_score, 0.4)
+        self.assertIn("quality_below_threshold", recommendation.reasons)
 
 
 if __name__ == "__main__":

@@ -80,6 +80,7 @@ class FeatureBuilder:
             "elo_30d_delta": home_rating.elo_30d - away_rating.elo_30d,
             "opponent_strength_delta": home_rating.opponent_strength_adjustment - away_rating.opponent_strength_adjustment,
             "rating_sample_delta": float(home_rating.sample_size - away_rating.sample_size),
+            "rating_min_sample": float(min(home_rating.sample_size, away_rating.sample_size)),
         }
 
     def _esports_features(
@@ -109,6 +110,7 @@ class FeatureBuilder:
                     "bp_fit_delta": home.bp_fit - away.bp_fit,
                     "synergy_delta": home.synergy - away.synergy,
                     "style_sample_delta": float(home.sample_size - away.sample_size),
+                    "style_min_sample": float(min(home.sample_size, away.sample_size)),
                 }
             )
             features["style_clash_home_advantage"] = self._style_clash(home, away)
