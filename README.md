@@ -50,38 +50,28 @@ This project is built around three guardrails:
 
 ## Quick Start
 
-In Codex, use plain language first:
+In Codex, use plain language first. The `sportsbet-assistant` skill treats this project as an AI thinking aid:
 
-```text
-帮我保守看一下有没有值得押的，1000本金。
-```
+- Codex gathers current fixtures, team context, odds, and sources.
+- Codex writes score/winner hypotheses, counterarguments, and failure modes.
+- The tool audits that decision card and calculates risk-controlled stake suggestions.
 
-```text
-激进一点跑个回测，用 2k 资金。
-```
-
-```text
-把全部候选都给我看，不只看推荐。
-```
-
-The `sportsbet-assistant` Codex skill maps wording such as `稳一点`, `激进`, `梭哈`, `回测`, `全部`, and `500本金` into tool settings automatically.
-
-From this folder, the shortest manual prediction command is:
+The shortest manual demo command from this folder is:
 
 ```powershell
 .\bet.ps1
 ```
 
-Natural-language CLI fallback:
+Generate an AI thinking protocol for current-event analysis:
 
 ```powershell
-.\bet.ps1 ask "帮我稳一点，500本金，只看推荐"
+.\bet.ps1 think "10 USDT adventurous plan for tonight's three World Cup matches"
 ```
 
-Backtest shortcut:
+Plan from a completed AI decision card:
 
 ```powershell
-.\bet.ps1 ask "激进一点跑个回测，用2k资金"
+.\bet.ps1 plan-card .\research-card.json
 ```
 
 Prediction output now includes:
@@ -95,11 +85,11 @@ Prediction output now includes:
 Use it from another Agent/tool host:
 
 ```python
-from sportsbet_tool.tool_api import run_intent, predict_sample, backtest_sample
+from sportsbet_tool.tool_api import research_brief, plan_research_card, run_intent
 
-payload = run_intent("帮我保守看一下有没有值得押的，1000本金")
-prediction_payload = predict_sample(bankroll=1000, active_only=True, risk_mode="steady")
-backtest_payload = backtest_sample(bankroll=1000)
+brief = research_brief("10 USDT adventurous plan for tonight's three World Cup matches", bankroll=10, risk_mode="adventurous")
+payload = plan_research_card(completed_decision_card)
+demo_payload = run_intent("safe demo prediction with 1000 bankroll")
 ```
 
 ## Factor Weights and Risk Modes

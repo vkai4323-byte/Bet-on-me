@@ -19,30 +19,31 @@ class IntentSettings:
 
 
 INSURANCE_HINTS = (
-    "保守",
-    "稳",
-    "谨慎",
-    "小注",
-    "低风险",
-    "保险",
-    "别冒险",
-    "少下",
+    "\u4fdd\u5b88",
+    "\u7a33",
+    "\u8c28\u614e",
+    "\u5c0f\u6ce8",
+    "\u4f4e\u98ce\u9669",
+    "\u4fdd\u9669",
+    "\u522b\u5192\u9669",
+    "\u5c11\u4e0b",
     "conservative",
     "safe",
 )
 ADVENTUROUS_HINTS = (
-    "激进",
-    "进取",
-    "大胆",
-    "高风险",
-    "多下",
-    "冒险",
+    "\u6fc0\u8fdb",
+    "\u8fdb\u53d6",
+    "\u5927\u80c6",
+    "\u9ad8\u98ce\u9669",
+    "\u591a\u4e0b",
+    "\u5192\u9669",
     "adventurous",
     "aggressive",
 )
-WILD_HINTS = ("梭哈", "疯狂", "最大", "拉满", "all in", "all-in", "wild")
-BACKTEST_HINTS = ("回测", "历史", "表现", "验证", "复盘", "backtest", "bt")
-ALL_HINTS = ("全部", "完整", "所有", "all", "show all")
+WILD_HINTS = ("\u68ad\u54c8", "\u75af\u72c2", "\u6700\u5927", "\u62c9\u6ee1", "all in", "all-in", "wild")
+BACKTEST_HINTS = ("\u56de\u6d4b", "\u5386\u53f2", "\u8868\u73b0", "\u9a8c\u8bc1", "\u590d\u76d8", "backtest", "bt")
+ALL_HINTS = ("\u5168\u90e8", "\u5b8c\u6574", "\u6240\u6709", "all", "show all")
+ACTIVE_HINTS = ("\u53ea\u770b\u63a8\u8350", "\u6709\u4ef7\u503c", "\u503c\u5f97", "active")
 
 
 def parse_intent(text: str | None) -> IntentSettings:
@@ -77,7 +78,7 @@ def parse_intent(text: str | None) -> IntentSettings:
     if _has_any(lowered, ALL_HINTS):
         settings.active_only = False
         settings.reasons.append("show_all_hint")
-    elif "只看推荐" in lowered or "有价值" in lowered or "值得" in lowered or "active" in lowered:
+    elif _has_any(lowered, ACTIVE_HINTS):
         settings.active_only = True
         settings.reasons.append("active_only_hint")
     else:
@@ -92,10 +93,22 @@ def _has_any(text: str, hints: tuple[str, ...]) -> bool:
 
 
 def _extract_bankroll(text: str) -> float | None:
+    money_words = "|".join(
+        [
+            "\u672c\u91d1",
+            "\u8d44\u91d1",
+            "\u9884\u7b97",
+            "\u8d26\u6237",
+            "\u7528",
+            "bankroll",
+            "budget",
+        ]
+    )
     patterns = [
-        r"(?:本金|资金|bankroll|预算|账户|用)\s*[:：]?\s*[$￥¥]?\s*(\d+(?:\.\d+)?)\s*(万|k|千)?",
-        r"[$￥¥]\s*(\d+(?:\.\d+)?)\s*(万|k|千)?",
-        r"(\d+(?:\.\d+)?)\s*(万|k|千)?\s*(?:本金|资金|预算|bankroll)",
+        rf"(?:{money_words})\s*[:\uff1a]?\s*[$\uffe5\u00a5]?\s*(\d+(?:\.\d+)?)\s*(\u4e07|k|\u5343|usdt|usd)?",
+        r"[$]\s*(\d+(?:\.\d+)?)\s*(k|usdt|usd)?",
+        rf"(\d+(?:\.\d+)?)\s*(\u4e07|k|\u5343|usdt|usd)?\s*(?:{money_words})",
+        r"(\d+(?:\.\d+)?)\s*(usdt|usd)",
     ]
     for pattern in patterns:
         match = re.search(pattern, text)
@@ -103,9 +116,9 @@ def _extract_bankroll(text: str) -> float | None:
             continue
         amount = float(match.group(1))
         unit = match.group(2)
-        if unit == "万":
+        if unit == "\u4e07":
             amount *= 10000
-        elif unit in {"k", "千"}:
+        elif unit in {"k", "\u5343"}:
             amount *= 1000
         return amount
     return None

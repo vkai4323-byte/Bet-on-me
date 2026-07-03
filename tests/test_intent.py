@@ -29,6 +29,12 @@ class IntentTests(unittest.TestCase):
         self.assertEqual(intent.risk_mode, "wild")
         self.assertFalse(intent.active_only)
 
+    def test_parse_usdt_adventurous_request(self):
+        intent = parse_intent("10 USDT adventurous plan")
+
+        self.assertEqual(intent.bankroll, 10.0)
+        self.assertEqual(intent.risk_mode, "adventurous")
+
     def test_run_intent_returns_interpreted_settings(self):
         payload = run_intent("保守一点，500本金，只看推荐")
 
