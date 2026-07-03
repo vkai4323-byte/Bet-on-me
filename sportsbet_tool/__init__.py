@@ -11,6 +11,8 @@ from sportsbet_tool.models import (
     PlayerRatingSnapshot,
     Prediction,
 )
+from sportsbet_tool.ensemble import ModelDebatePredictor
+from sportsbet_tool.portfolio import PortfolioPlanner
 
 __all__ = [
     "BetRecommendation",
@@ -19,7 +21,9 @@ __all__ = [
     "FootballContextSnapshot",
     "MarketOdds",
     "Match",
+    "ModelDebatePredictor",
     "PatchMetaSnapshot",
     "PlayerRatingSnapshot",
+    "PortfolioPlanner",
     "Prediction",
 ]

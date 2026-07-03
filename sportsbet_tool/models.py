@@ -169,6 +169,11 @@ class Prediction:
     confidence_high: float
     factors: dict[str, float]
     created_at: datetime = field(default_factory=utc_now)
+    model_probabilities: dict[str, float] = field(default_factory=dict)
+    disagreement: float = 0.0
+    veto_reasons: list[str] = field(default_factory=list)
+    consensus_probability: float | None = None
+    market_probability: float | None = None
 
 
 @dataclass(slots=True)
@@ -192,6 +197,9 @@ class BetRecommendation:
     requires_manual_confirmation: bool = True
     book_implied_probability: float | None = None
     quality_score: float = 1.0
+    model_disagreement: float = 0.0
+    consensus_probability: float | None = None
+    veto_reasons: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)

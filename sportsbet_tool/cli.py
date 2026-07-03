@@ -18,10 +18,11 @@ from sportsbet_tool.data_ingestion import (
     style_from_dict,
 )
 from sportsbet_tool.execution_bridge import Bet365SportsbookAdapter, WebBridgeClient
+from sportsbet_tool.ensemble import ModelDebatePredictor
 from sportsbet_tool.features import FeatureBuilder
-from sportsbet_tool.modeling import HeuristicProbabilityModel
 from sportsbet_tool.models import clean_dict
 from sportsbet_tool.odds import no_vig_probabilities_by_market
+from sportsbet_tool.portfolio import PortfolioConfig, PortfolioPlanner
 from sportsbet_tool.quality import FeatureQualityAnalyzer
 from sportsbet_tool.risk import BankrollStrategy, RiskMode, risk_config_for_mode
 
@@ -103,7 +104,11 @@ def _backtest(bankroll: float, config: Any) -> int:
                 quality_reasons=quality_report.reasons,
             )
         )
-    result = BacktestEngine(strategy=BankrollStrategy(config.risk)).run(samples, bankroll)
+    result = BacktestEngine(
+        model=ModelDebatePredictor(),
+        strategy=BankrollStrategy(config.risk),
+        planner=_build_portfolio_planner(config),
+    ).run(samples, bankroll)
     payload = asdict(result)
     print(json.dumps(payload, indent=2, default=str, ensure_ascii=False))
     return 0
@@ -122,11 +127,12 @@ def _prepare_slip(url: str, stake_selector: str | None, bankroll: float, config:
 
 def _build_recommendations(bundle: dict[str, Any], bankroll: float, config: Any) -> list[Any]:
     builder = FeatureBuilder()
-    model = HeuristicProbabilityModel()
+    model = ModelDebatePredictor()
     strategy = BankrollStrategy(config.risk)
+    planner = _build_portfolio_planner(config)
     quality = FeatureQualityAnalyzer()
     recommendations = []
-    daily_risk = 0.0
+    day_candidates: list[Any] = []
     current_day: str | None = None
     default_odds = [odds for odds in bundle["odds"].values() if odds.bookmaker == config.default_bookmaker]
     fair_probabilities = no_vig_probabilities_by_market(default_odds)
@@ -136,8 +142,10 @@ def _build_recommendations(bundle: dict[str, Any], bankroll: float, config: Any)
         match = bundle["matches"][odds.match_id]
         match_day = match.start_time.date().isoformat()
         if match_day != current_day:
+            if day_candidates:
+                recommendations.extend(planner.plan(day_candidates, bankroll))
+                day_candidates = []
             current_day = match_day
-            daily_risk = 0.0
         vector = builder.build(
             match=match,
             odds=odds,
@@ -147,20 +155,31 @@ def _build_recommendations(bundle: dict[str, Any], bankroll: float, config: Any)
             football_context=bundle["football_context_by_match"].get(match.match_id),
         )
         quality_report = quality.score(vector)
-        prediction = model.predict_vector(vector)
+        fair_probability = fair_probabilities.get(odds.market_id or "")
+        prediction = model.predict_vector(vector, market_probability=fair_probability)
         recommendation = strategy.recommend(
             prediction,
             odds,
             bankroll,
-            daily_risk_used=daily_risk,
-            fair_implied_probability=fair_probabilities.get(odds.market_id or ""),
+            daily_risk_used=0.0,
+            fair_implied_probability=fair_probability,
             quality_score=quality_report.score,
             quality_reasons=quality_report.reasons,
         )
-        if recommendation.status == "recommended":
-            daily_risk += recommendation.stake
-        recommendations.append(recommendation)
+        day_candidates.append(recommendation)
+    if day_candidates:
+        recommendations.extend(planner.plan(day_candidates, bankroll))
     return recommendations
+
+
+def _build_portfolio_planner(config: Any) -> PortfolioPlanner:
+    return PortfolioPlanner(
+        PortfolioConfig(
+            max_portfolio_fraction=config.risk.max_daily_risk_fraction,
+            max_match_fraction=min(config.risk.max_single_bet_fraction, config.risk.max_daily_risk_fraction),
+            max_market_fraction=min(config.risk.max_single_bet_fraction * 1.5, config.risk.max_daily_risk_fraction),
+        )
+    )
 
 
 def _load_example_bundle() -> dict[str, Any]:

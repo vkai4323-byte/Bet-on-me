@@ -22,11 +22,16 @@ This project is built around three guardrails:
   - Football referee, motivation, competition format, weather, venue, cards, suspensions, injuries, and schedule pressure.
 - Modeling:
   - Deterministic heuristic probability model with calibration.
+  - Debate ensemble that compares full-factor, strength-only, context-shock, and style/tactics model views.
+  - Market no-vig probability is used as a baseline challenger, not blended into the internal model consensus.
+  - Conservative probability adjustment when model views disagree.
   - Stable interfaces for future scikit-learn or gradient boosting models.
 - Bankroll:
   - Decimal odds.
   - No-vig fair probability when both sides of a market are available.
   - 0.5 fractional Kelly default.
+  - Portfolio-level planning across candidate bets.
+  - Same-match filtering, exposure caps, and model-disagreement stake scaling.
   - 2 percent max stake per bet.
   - 5 percent daily risk cap.
   - Consecutive-loss pause.
@@ -71,6 +76,14 @@ Run the sample backtest:
 ```powershell
 C:\Users\Admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m sportsbet_tool.cli backtest --bankroll 1000
 ```
+
+Prediction output now includes:
+
+- `consensus_probability`: the internal model consensus before conservative adjustment.
+- `model_disagreement`: spread between independent model views.
+- `model_probabilities`: per-model probabilities, including the market no-vig challenger when available.
+- `veto_reasons`: reasons to cut exposure when the model debate is weak or conflicts with market context.
+- `portfolio_*` reasons: stake changes made by the portfolio planner after single-bet Kelly sizing.
 
 Use it from another Agent/tool host:
 

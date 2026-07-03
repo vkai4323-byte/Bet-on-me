@@ -81,6 +81,7 @@ def risk_config_for_mode(mode: RiskMode) -> RiskConfig:
         max_daily_risk_fraction=config.max_daily_risk_fraction,
         min_edge=config.min_edge,
         pause_after_consecutive_losses=config.pause_after_consecutive_losses,
+        min_stake=config.min_stake,
         min_quality_score=config.min_quality_score,
         mode=config.mode,
     )
@@ -126,6 +127,12 @@ class BankrollStrategy:
             reasons.append("paused_after_consecutive_losses")
             status = "paused"
             applied_fraction = 0.0
+
+        for reason in prediction.veto_reasons:
+            if reason not in reasons:
+                reasons.append(reason)
+        if prediction.veto_reasons:
+            applied_fraction *= 0.5
 
         if edge < self.config.min_edge:
             reasons.append("edge_below_threshold")
@@ -188,6 +195,9 @@ class BankrollStrategy:
             requires_manual_confirmation=True,
             book_implied_probability=book_imp,
             quality_score=quality_score,
+            model_disagreement=prediction.disagreement,
+            consensus_probability=prediction.consensus_probability,
+            veto_reasons=list(prediction.veto_reasons),
         )
 
     @staticmethod

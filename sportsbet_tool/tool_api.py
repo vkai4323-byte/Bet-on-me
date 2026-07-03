@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
-from sportsbet_tool.cli import _build_recommendations, _load_example_bundle
+from sportsbet_tool.cli import _build_portfolio_planner, _build_recommendations, _load_example_bundle
 from sportsbet_tool.config import load_config
 from sportsbet_tool.models import clean_dict
 from sportsbet_tool.odds import no_vig_probabilities_by_market
@@ -47,6 +47,7 @@ def backtest_sample(
         config.risk = risk_config_for_mode(risk_mode)
     bundle = _load_example_bundle()
     from sportsbet_tool.backtesting import BacktestEngine, BacktestSample
+    from sportsbet_tool.ensemble import ModelDebatePredictor
     from sportsbet_tool.features import FeatureBuilder
     from sportsbet_tool.risk import BankrollStrategy
 
@@ -78,7 +79,11 @@ def backtest_sample(
                 quality_reasons=quality_report.reasons,
             )
         )
-    result = BacktestEngine(strategy=BankrollStrategy(config.risk)).run(samples, bankroll)
+    result = BacktestEngine(
+        model=ModelDebatePredictor(),
+        strategy=BankrollStrategy(config.risk),
+        planner=_build_portfolio_planner(config),
+    ).run(samples, bankroll)
     payload = asdict(result)
     payload["bookmaker"] = config.default_bookmaker
     payload["risk_mode"] = config.risk.mode

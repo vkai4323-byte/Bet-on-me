@@ -6,6 +6,7 @@ from datetime import datetime
 from sportsbet_tool.features import FeatureVector
 from sportsbet_tool.modeling import HeuristicProbabilityModel
 from sportsbet_tool.models import BetRecommendation, MarketOdds
+from sportsbet_tool.portfolio import PortfolioPlanner
 from sportsbet_tool.risk import BankrollStrategy, RiskConfig
 
 
@@ -42,9 +43,11 @@ class BacktestEngine:
         self,
         model: HeuristicProbabilityModel | None = None,
         strategy: BankrollStrategy | None = None,
+        planner: PortfolioPlanner | None = None,
     ) -> None:
         self.model = model or HeuristicProbabilityModel()
         self.strategy = strategy or BankrollStrategy(RiskConfig())
+        self.planner = planner
 
     def run(self, samples: list[BacktestSample], starting_bankroll: float) -> BacktestResult:
         bankroll = starting_bankroll
@@ -61,48 +64,70 @@ class BacktestEngine:
         buckets: dict[str, list[tuple[float, int]]] = {}
         recommendations: list[BetRecommendation] = []
 
-        for sample in sorted(samples, key=lambda item: item.start_time):
-            day = sample.start_time.date().isoformat()
-            if day != current_day:
-                current_day = day
-                daily_risk_used = 0.0
+        sorted_samples = sorted(samples, key=lambda item: item.start_time)
+        if self.planner is not None:
+            grouped: dict[str, list[BacktestSample]] = {}
+            for sample in sorted_samples:
+                grouped.setdefault(sample.start_time.date().isoformat(), []).append(sample)
+            day_groups = grouped.values()
+        else:
+            day_groups = ([sample] for sample in sorted_samples)
 
-            prediction = self.model.predict_vector(sample.vector)
-            recommendation = self.strategy.recommend(
-                prediction,
-                sample.odds,
-                bankroll,
-                daily_risk_used=daily_risk_used,
-                consecutive_losses=consecutive_losses,
-                fair_implied_probability=sample.fair_implied_probability,
-                quality_score=sample.quality_score,
-                quality_reasons=sample.quality_reasons,
-            )
-            recommendations.append(recommendation)
-            self._add_calibration_sample(buckets, prediction.probability, sample.actual_side == sample.odds.side)
+        for day_samples in day_groups:
+            sample_recommendations: list[tuple[BacktestSample, BetRecommendation]] = []
+            for sample in day_samples:
+                day = sample.start_time.date().isoformat()
+                if day != current_day:
+                    current_day = day
+                    daily_risk_used = 0.0
 
-            if recommendation.status != "recommended" or recommendation.stake <= 0:
-                continue
+                prediction = self._predict(sample)
+                recommendation = self.strategy.recommend(
+                    prediction,
+                    sample.odds,
+                    bankroll,
+                    daily_risk_used=daily_risk_used if self.planner is None else 0.0,
+                    consecutive_losses=consecutive_losses,
+                    fair_implied_probability=sample.fair_implied_probability,
+                    quality_score=sample.quality_score,
+                    quality_reasons=sample.quality_reasons,
+                )
+                self._add_calibration_sample(buckets, prediction.probability, sample.actual_side == sample.odds.side)
+                sample_recommendations.append((sample, recommendation))
 
-            bets += 1
-            total_staked += recommendation.stake
-            daily_risk_used += recommendation.stake
-            if sample.actual_side == sample.odds.side:
-                profit = recommendation.stake * (sample.odds.decimal_odds - 1.0)
-                wins += 1
-                consecutive_losses = 0
-            else:
-                profit = -recommendation.stake
-                consecutive_losses += 1
+                if self.planner is None and recommendation.status == "recommended":
+                    daily_risk_used += recommendation.stake
 
-            bankroll += profit
-            total_profit += profit
-            peak = max(peak, bankroll)
-            if peak > 0:
-                max_drawdown = max(max_drawdown, (peak - bankroll) / peak)
+            if self.planner is not None:
+                planned = self.planner.plan([item[1] for item in sample_recommendations], bankroll)
+                sample_recommendations = [
+                    (sample, recommendation)
+                    for (sample, _), recommendation in zip(sample_recommendations, planned, strict=True)
+                ]
 
-            if sample.closing_decimal_odds:
-                clv_values.append((1.0 / sample.closing_decimal_odds) - (1.0 / sample.odds.decimal_odds))
+            for sample, recommendation in sample_recommendations:
+                recommendations.append(recommendation)
+                if recommendation.status != "recommended" or recommendation.stake <= 0:
+                    continue
+
+                bets += 1
+                total_staked += recommendation.stake
+                if sample.actual_side == sample.odds.side:
+                    profit = recommendation.stake * (sample.odds.decimal_odds - 1.0)
+                    wins += 1
+                    consecutive_losses = 0
+                else:
+                    profit = -recommendation.stake
+                    consecutive_losses += 1
+
+                bankroll += profit
+                total_profit += profit
+                peak = max(peak, bankroll)
+                if peak > 0:
+                    max_drawdown = max(max_drawdown, (peak - bankroll) / peak)
+
+                if sample.closing_decimal_odds:
+                    clv_values.append((1.0 / sample.closing_decimal_odds) - (1.0 / sample.odds.decimal_odds))
 
         roi = total_profit / total_staked if total_staked else 0.0
         hit_rate = wins / bets if bets else 0.0
@@ -140,3 +165,9 @@ class BacktestEngine:
                 "actual_win_rate": sum(item[1] for item in values) / count,
             }
         return summary
+
+    def _predict(self, sample: BacktestSample):
+        try:
+            return self.model.predict_vector(sample.vector, market_probability=sample.fair_implied_probability)
+        except TypeError:
+            return self.model.predict_vector(sample.vector)
