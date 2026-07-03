@@ -1,0 +1,31 @@
+bankroll:
+  currency: USD
+  starting_amount: 1000
+
+risk:
+  mode: steady
+  kelly_fraction: 0.5
+  max_single_bet_fraction: 0.02
+  max_daily_risk_fraction: 0.05
+  min_edge: 0.015
+  pause_after_consecutive_losses: 5
+  min_quality_score: 0.55
+
+markets:
+  default_bookmaker: bet365
+  allowed_sports:
+    - football
+    - lol
+    - valorant
+    - cs2
+  odds_format: decimal
+
+compliance:
+  jurisdiction_confirmed: false
+  user_accepts_manual_final_confirmation: true
+  allow_final_submit_automation: false
+
+web_bridge:
+  endpoint: http://127.0.0.1:10086/command
+  session: sportsbet-tool
+  group_title: SportsBet Tool
