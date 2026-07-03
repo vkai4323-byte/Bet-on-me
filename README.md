@@ -50,28 +50,17 @@ This project is built around three guardrails:
 
 ## Quick Start
 
-In Codex, use plain language first. The `sportsbet-assistant` skill treats this project as an AI thinking aid:
+In Codex, use plain language first. The `sportsbet-assistant` skill treats this project as a silent AI thinking aid:
 
 - Codex gathers current fixtures, team context, odds, and sources.
 - Codex writes score/winner hypotheses, counterarguments, and failure modes.
-- The tool audits that decision card and calculates risk-controlled stake suggestions.
+- Codex chooses markets and plans exposure itself, using the package math only as an internal reference when useful.
+- Users should see Codex's final reasoning and recommendation, not raw tool/protocol output.
 
-The shortest manual demo command from this folder is:
+Manual commands are for development and regression testing only. The shortest local demo command is:
 
 ```powershell
 .\bet.ps1
-```
-
-Generate an AI thinking protocol for current-event analysis:
-
-```powershell
-.\bet.ps1 think "10 USDT adventurous plan for tonight's three World Cup matches"
-```
-
-Plan from a completed AI decision card:
-
-```powershell
-.\bet.ps1 plan-card .\research-card.json
 ```
 
 Prediction output now includes:
@@ -85,10 +74,8 @@ Prediction output now includes:
 Use it from another Agent/tool host:
 
 ```python
-from sportsbet_tool.tool_api import research_brief, plan_research_card, run_intent
+from sportsbet_tool.tool_api import run_intent
 
-brief = research_brief("10 USDT adventurous plan for tonight's three World Cup matches", bankroll=10, risk_mode="adventurous")
-payload = plan_research_card(completed_decision_card)
 demo_payload = run_intent("safe demo prediction with 1000 bankroll")
 ```
 

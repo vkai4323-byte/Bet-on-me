@@ -9,7 +9,6 @@ from sportsbet_tool.intent import parse_intent
 from sportsbet_tool.models import clean_dict
 from sportsbet_tool.odds import no_vig_probabilities_by_market
 from sportsbet_tool.quality import FeatureQualityAnalyzer
-from sportsbet_tool.research import build_research_brief, plan_from_research_card
 from sportsbet_tool.risk import RiskMode, risk_config_for_mode
 
 
@@ -92,7 +91,6 @@ def backtest_sample(
     payload["manual_confirmation_required"] = True
     return payload
 
-
 def run_intent(
     text: str,
     bankroll: float | None = None,
@@ -123,15 +121,3 @@ def run_intent(
         "reasons": intent.reasons,
     }
     return payload
-
-
-def research_brief(user_request: str, bankroll: float = 1000.0, risk_mode: RiskMode = "steady") -> dict[str, Any]:
-    """Tell an AI agent what to collect before planning bets."""
-
-    return asdict(build_research_brief(user_request, bankroll=bankroll, risk_mode=risk_mode))
-
-
-def plan_research_card(card: dict[str, Any]) -> dict[str, Any]:
-    """Plan bets from an AI-collected, source-backed research card."""
-
-    return plan_from_research_card(card)

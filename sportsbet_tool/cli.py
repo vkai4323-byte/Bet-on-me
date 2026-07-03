@@ -26,7 +26,6 @@ from sportsbet_tool.models import clean_dict
 from sportsbet_tool.odds import no_vig_probabilities_by_market
 from sportsbet_tool.portfolio import PortfolioConfig, PortfolioPlanner
 from sportsbet_tool.quality import FeatureQualityAnalyzer
-from sportsbet_tool.research import build_research_brief, plan_from_research_card
 from sportsbet_tool.risk import BankrollStrategy, RiskMode, risk_config_for_mode
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -41,11 +40,6 @@ KNOWN_COMMANDS = {
     "bt",
     "ask",
     "自然语言",
-    "research-brief",
-    "brief",
-    "think",
-    "protocol",
-    "plan-card",
     "prepare-slip",
     "slip",
 }
@@ -77,18 +71,6 @@ def main(argv: list[str] | None = None) -> int:
     ask = sub.add_parser("ask", aliases=["自然语言"], help="Infer settings from a natural-language request.")
     ask.add_argument("text", nargs="*")
 
-    brief = sub.add_parser(
-        "research-brief",
-        aliases=["brief", "think", "protocol"],
-        help="Generate an AI thinking protocol for a betting request.",
-    )
-    brief.add_argument("text", nargs="*")
-    brief.add_argument("--bankroll", type=float, default=None, dest="command_bankroll")
-    brief.add_argument("--risk-mode", choices=["insurance", "steady", "adventurous", "wild"], default=None, dest="command_risk_mode")
-
-    card = sub.add_parser("plan-card", help="Plan bets from an AI-collected research card JSON file.")
-    card.add_argument("path")
-
     slip = sub.add_parser("prepare-slip", aliases=["slip"], help="Open sportsbook page and prepare manual bet-slip instructions.")
     slip.add_argument("--url", required=True)
     slip.add_argument("--stake-selector", default=None)
@@ -99,21 +81,6 @@ def main(argv: list[str] | None = None) -> int:
     config = load_config(args.config)
     if args.command in {"ask", "自然语言"}:
         return _run_intent(" ".join(args.text), config, args.global_bankroll, args.global_risk_mode)
-    if args.command in {"research-brief", "brief", "think", "protocol"}:
-        text = " ".join(args.text)
-        intent = parse_intent(text)
-        risk_mode = _arg_value(args, "command_risk_mode", "global_risk_mode") or intent.risk_mode or config.risk.mode
-        bankroll = _arg_value(args, "command_bankroll", "global_bankroll")
-        bankroll = bankroll if bankroll is not None else intent.bankroll
-        bankroll = bankroll if bankroll is not None else config.bankroll_amount
-        brief_payload = build_research_brief(text, bankroll=bankroll, risk_mode=risk_mode)
-        print(json.dumps(asdict(brief_payload), indent=2, ensure_ascii=False, default=str))
-        return 0
-    if args.command == "plan-card":
-        with Path(args.path).open("r", encoding="utf-8") as handle:
-            payload = plan_from_research_card(json.load(handle))
-        print(json.dumps(payload, indent=2, ensure_ascii=False, default=str))
-        return 0
 
     risk_mode = _arg_value(args, "command_risk_mode", "global_risk_mode")
     if risk_mode:

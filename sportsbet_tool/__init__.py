@@ -14,7 +14,6 @@ from sportsbet_tool.models import (
 from sportsbet_tool.ensemble import ModelDebatePredictor
 from sportsbet_tool.intent import IntentSettings, parse_intent
 from sportsbet_tool.portfolio import PortfolioPlanner
-from sportsbet_tool.research import audit_decision_card, build_research_brief, plan_from_research_card
 
 __all__ = [
     "BetRecommendation",
@@ -29,8 +28,5 @@ __all__ = [
     "PortfolioPlanner",
     "Prediction",
     "IntentSettings",
-    "audit_decision_card",
-    "build_research_brief",
-    "plan_from_research_card",
     "parse_intent",
 ]
